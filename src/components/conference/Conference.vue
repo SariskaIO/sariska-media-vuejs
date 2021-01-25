@@ -6,9 +6,9 @@
 </template>
 
 <script>
-import { onBeforeUnmount, toRef, watch } from 'vue';
-import JitsiMeetJS from "collabor8-media-transport";
-import {conferenceConfig} from '../../constants/_constants';
+import { onBeforeUnmount, toRef, watchEffect, ref } from 'vue';
+import JitsiMeetJS from "sariska-media-transport";
+import {conferenceConfig} from '@/constants';
 import LocalStream from '../localStream/LocalStream';
 import RemoteStream from '../remoteStream/RemoteStream';
 
@@ -18,66 +18,65 @@ export default {
         LocalStream,
         RemoteStream
     },
+
     props: {
         connection: String
     },
+
     setup(props){
+
         const room = ref(null);
+        const remoteTracks = ref([]);
+        const localTracks = ref([]);
+        const connection = toRef(props, 'connection');
 
-        function setRoom(val){
-            room.value=val
-        }
-    watch(()=>{
-        JitsiMeetJS.createLocalTracks({devices:["audio", "video"], resolution: "180"}).
-        then(tracks => {
-            setLocalTracks(tracks);
-            room.value && tracks.forEach(track=>room.addTrack(track).catch(err =>console.log("track already added")));
-        }).
-        catch(()=>console.log("failed to fetch tracks"));
-    })
-        watch(()=>{
-            const connection = toRef(props, 'connection');
+        watchEffect(()=>{
+            if (room.value && localTracks.value.length) {
+               localTracks.value.forEach(track=>room.value.addTrack(track).catch(err =>console.log("track already added", err)));
+            }
+            JitsiMeetJS.createLocalTracks({devices:["audio", "video"], resolution: "180"}).
+            then(tracks => {
+                localTracks.value = tracks;
+            }).
+            catch(()=>console.log("failed to fetch tracks"));
+        })
+
+        watchEffect(()=>{
             if ( connection.value === null ) {
-            return;
+               return;
             }
-            const room = connection.initJitsiConference(conferenceConfig);
-
+            const room = connection.value.initJitsiConference(conferenceConfig);
             const onConferenceJoined = ()=> {
-            setRoom(room);
-        }
-
-        const onTrackRemoved = (track)=> {
-            setRemoteTracks(remoteTracks.value.filter(item => item.track.id !== track.track.id));
-        }
-   
-        const onRemoteTrack = (track)=> {
-            if (!track  || track.isLocal()) {
-                return;
+               room.value = room;
             }
-            setRemoteTracks(remoteTracks => [...remoteTracks.value, track]);
-        }
 
-        room.on(JitsiMeetJS.events.conference.CONFERENCE_JOINED, onConferenceJoined);
-        room.on(JitsiMeetJS.events.conference.TRACK_ADDED, onRemoteTrack);
-        room.on(JitsiMeetJS.events.conference.TRACK_REMOVED, onTrackRemoved);
-        room.join();
-
-        })
-        onBeforeUnmount(()=>{
-        function beforeUnload(event) {
-            if (room && room.isJoined()) {
-                room.leave().then(() => connection.disconnect(event));
+            const onTrackRemoved = (track)=> {
+               remoteTracks.value = remoteTracks.value.filter(item => item.track.id !== track.track.id);
             }
-        }
-            window.addEventListener('beforeunload', beforeUnload);
-            
-            beforeUnload();
 
-        })
+            const onRemoteTrack = (track)=> {
+               if (!track  || track.isLocal()) {
+                  return;
+               }
+               remoteTracks.value = remoteTracks.value.push(track);
+            }
+
+            room.on(JitsiMeetJS.events.conference.CONFERENCE_JOINED, onConferenceJoined);
+            room.on(JitsiMeetJS.events.conference.TRACK_ADDED, onRemoteTrack);
+            room.on(JitsiMeetJS.events.conference.TRACK_REMOVED, onTrackRemoved);
+            console.log('joineddmmddmdmdmdmd')
+            room.join();
+          })
+
+          onBeforeUnmount(()=>{
+             if (room.value && room.value.isJoined()) {
+                 room.value.leave().then(() => connection.value.disconnect(event));
+             }
+          })
+
         return {
             room
         }
     }
-    
 }
 </script>

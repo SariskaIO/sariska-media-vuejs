@@ -3,7 +3,7 @@
 </template>
 
 <script>
-import { onUpdated, toRef } from 'vue';
+import {toRef, ref, onMounted, onUnmounted} from 'vue';
 export default {
     name: 'AudioStream',
     props:{
@@ -13,16 +13,16 @@ export default {
         const audioRef = ref(null);
         const track = toRef(props, 'track');
 
-        onUpdated(()=>{
-            window.addEventListener('load', ()=>{
-                const element = audioRef.currrent;
-                track.attach(element);
-                return ()=>{
-                    track.detach(element);
-                }
-            })
+        onMounted( ()=>{
+          const element = audioRef.value.current;
+          track.value.attach(element);
+        })
+
+        onUnmounted(()=> {
+          const element = audioRef.value.current;
+          track.value.detach(element);
+
         })
     }
-    
 }
 </script>

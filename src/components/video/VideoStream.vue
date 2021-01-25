@@ -3,7 +3,7 @@
 </template>
 
 <script>
-import { toRef, watch } from 'vue';
+import {toRef, ref, onMounted, onUnmounted} from 'vue';
 export default {
     name: 'VideoStream',
     props:{
@@ -12,18 +12,16 @@ export default {
     setup(props){
         const videoRef = ref(null);
         const track = toRef(props, 'track');
+        onMounted( ()=>{
+           const element = videoRef.value.current;
+           track.value.attach(element);
+        })
 
-        watch(()=>{
-            window.addEventListener('load', ()=>{
-                const element = videoRef.currrent;
-                track.attach(element);
-                return ()=>{
-                    track.detach(element);
-                }
-            })
+        onUnmounted(()=> {
+           const element = videoRef.value.current;
+           track.value.detach(element);
         })
     }
-    
 }
 </script>
 

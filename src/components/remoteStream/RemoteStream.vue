@@ -1,14 +1,14 @@
 <template>
     <div>
         <div  v-for="(track, index) in remoteTracks" :key="index">
-                    <div v-if="track.isVideoTrack()">
-                        <VideoStream :track="track" />
-                    </div>
-                    <div v-else>
-                        <AudioStream :track="track" />
-                    </div>
-                </div>
+            <div v-if="track.isVideoTrack()">
+                <VideoStream :track="track" />
             </div>
+            <div v-else>
+                <AudioStream :track="track" />
+            </div>
+        </div>
+    </div>
 </template>
 
 <script>
@@ -26,7 +26,7 @@ export default {
         VideoStream
     },
     setup(props){
-        const remoteTracks = toRef(props, 'remoteTracks');
+        toRef(props, 'remoteTracks');
     }
 }
 </script>

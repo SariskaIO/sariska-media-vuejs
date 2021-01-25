@@ -26,7 +26,7 @@ export default {
         VideoStream
     },
     setup(props){
-        const localTracks = toRef(props, 'localTracks');
+        toRef(props, 'localTracks');
     }
 }
 </script>
