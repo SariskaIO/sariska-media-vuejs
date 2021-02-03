@@ -3,7 +3,7 @@
 </template>
 
 <script>
-import {toRef, ref, onMounted, onUnmounted} from 'vue';
+import {toRef, ref, watchEffect, onBeforeUnmount} from 'vue';
 export default {
     name: 'AudioStream',
     props:{
@@ -13,16 +13,19 @@ export default {
         const audioRef = ref(null);
         const track = toRef(props, 'track');
 
-        onMounted( ()=>{
-          const element = audioRef.value.current;
+        watchEffect( ()=>{
+          const element = audioRef.value;
           track.value.attach(element);
         })
 
-        onUnmounted(()=> {
-          const element = audioRef.value.current;
+        onBeforeUnmount(()=> {
+          const element = audioRef.value;
           track.value.detach(element);
 
         })
+        return {
+          audioRef
+        }
     }
 }
 </script>

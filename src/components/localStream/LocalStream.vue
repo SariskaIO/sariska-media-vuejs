@@ -8,6 +8,7 @@
                 <AudioStream :track="track" />
             </div>
         </div>
+        <div>I am local</div>
     </div>
 </template>
 
@@ -19,14 +20,15 @@ import VideoStream from '../video/VideoStream';
 export default {
     name: 'LocalStream',
     props: {
-        localTracks: String
+        localTracks: [Array, Function]
     },
     components: {
         AudioStream,
         VideoStream
     },
     setup(props){
-        toRef(props, 'localTracks');
+        const lTracks=toRef(props, 'localTracks');
+        console.log('local', lTracks.value);
     }
 }
 </script>

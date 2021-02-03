@@ -1,12 +1,14 @@
 <template>
     <div>
-        <LocalStream :room="room" />
-        <RemoteStream :room="room" />
+        <LocalStream :localTracks="localTracks" />
+        <RemoteStream :remoteTracks="remoteTracks" />
+        <div>i am {{localTracks}}</div>
+        <div>me am {{remoteTracks}}</div>
     </div>
 </template>
 
 <script>
-import { onBeforeUnmount, toRef, watchEffect, ref } from 'vue';
+import { toRef, ref, watch, onUnmounted } from 'vue';
 import JitsiMeetJS from "sariska-media-transport";
 import {conferenceConfig} from '@/constants';
 import LocalStream from '../localStream/LocalStream';
@@ -20,7 +22,7 @@ export default {
     },
 
     props: {
-        connection: String
+        connection: Object
     },
 
     setup(props){
@@ -30,52 +32,61 @@ export default {
         const localTracks = ref([]);
         const connection = toRef(props, 'connection');
 
-        watchEffect(()=>{
-            if (room.value && localTracks.value.length) {
-               localTracks.value.forEach(track=>room.value.addTrack(track).catch(err =>console.log("track already added", err)));
-            }
+        const setRoom = (roomValue) => {
+            room.value = roomValue
+        }
+        const setRemoteTracks = (trackValue) => remoteTracks.value = [...remoteTracks.value, trackValue];
+        
+        const setLocalTracks = (trackValue) => localTracks.value = [...localTracks.value, trackValue];   
+
+        watch(room, ()=>{
             JitsiMeetJS.createLocalTracks({devices:["audio", "video"], resolution: "180"}).
             then(tracks => {
-                localTracks.value = tracks;
-            }).
-            catch(()=>console.log("failed to fetch tracks"));
+            setLocalTracks(tracks);
+            room.value && tracks.forEach(track=>room.value.addTrack(track).catch(err =>console.log("track already added", err)));
+        }).
+        catch(()=>console.log("failed to fetch tracks"));
         })
 
-        watchEffect(()=>{
-            if ( connection.value === null ) {
-               return;
+        watch(connection, ()=>{
+            if (!connection.value) {
+                return; 
             }
+
             const room = connection.value.initJitsiConference(conferenceConfig);
+
             const onConferenceJoined = ()=> {
-               room.value = room;
+                setRoom(room);
             }
-
             const onTrackRemoved = (track)=> {
-               remoteTracks.value = remoteTracks.value.filter(item => item.track.id !== track.track.id);
+                setRemoteTracks(remoteTracks.value.filter(item => item.track.id !== track.track.id));
             }
-
+    
             const onRemoteTrack = (track)=> {
-               if (!track  || track.isLocal()) {
-                  return;
-               }
-               remoteTracks.value = remoteTracks.value.push(track);
+                if (!track  || track.isLocal()) {
+                    return;
+                }
+                setRemoteTracks(track);
             }
 
             room.on(JitsiMeetJS.events.conference.CONFERENCE_JOINED, onConferenceJoined);
             room.on(JitsiMeetJS.events.conference.TRACK_ADDED, onRemoteTrack);
             room.on(JitsiMeetJS.events.conference.TRACK_REMOVED, onTrackRemoved);
-            console.log('joineddmmddmdmdmdmd')
             room.join();
-          })
+        })
 
-          onBeforeUnmount(()=>{
-             if (room.value && room.value.isJoined()) {
-                 room.value.leave().then(() => connection.value.disconnect(event));
-             }
+          onUnmounted(()=>{
+             if(!connection.value) return;
+            function beforeUnload(event) {
+                if (room.value && room.value.isJoined()) {
+                    room.value.leave().then(() => connection.value.disconnect(event));
+                }
+            }
+            beforeUnload();
           })
 
         return {
-            room
+            remoteTracks, localTracks
         }
     }
 }

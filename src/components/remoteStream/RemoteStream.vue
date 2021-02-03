@@ -8,6 +8,7 @@
                 <AudioStream :track="track" />
             </div>
         </div>
+        <div>I am remote</div>
     </div>
 </template>
 
@@ -19,14 +20,14 @@ import VideoStream from '../video/VideoStream';
 export default {
     name: 'RemoteStream',
     props: {
-        remoteTracks: String
+        remoteTracks: [Function, Array]
     },
     components: {
         AudioStream,
         VideoStream
     },
     setup(props){
-        toRef(props, 'remoteTracks');
+       toRef(props, 'remoteTracks');
     }
 }
 </script>
