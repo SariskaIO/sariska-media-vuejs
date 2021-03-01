@@ -6,7 +6,7 @@
 
 <script>
 import Conference from "../conference/Conference.vue";
-import JitsiMeetJS from 'sariska-media-transport';
+import SariskaMediaTransport from 'sariska-media-transport';
 import {connectionConfig, initSDKConfig} from '../../constants';
 import {getToken} from '../../utils/index';
 import { onMounted, ref, onBeforeUnmount } from 'vue';
@@ -19,19 +19,15 @@ export default {
     setup(){
         const connection = ref(null);
 
-        const setConnection = (val)=>{
-            connection.value = val;
-        };
-
                 const updateNetwork = ()=>{  //  set internet connectivity status
-                    JitsiMeetJS.setNetworkInfo({isOnline: window.navigator.onLine});
+                    SariskaMediaTransport.setNetworkInfo({isOnline: window.navigator.onLine});
                 }
 
 
 
         onMounted(()=>{
-                JitsiMeetJS.init(initSDKConfig);
-                JitsiMeetJS.setLogLevel(JitsiMeetJS.logLevels.ERROR); //TRACE ,DEBUG, INFO, LOG, WARN, ERROR
+                SariskaMediaTransport.init(initSDKConfig);
+                SariskaMediaTransport.setLogLevel(SariskaMediaTransport.logLevels.ERROR); //TRACE ,DEBUG, INFO, LOG, WARN, ERROR
                 let conn;
 
                 const fetchData =  async ()=>{
@@ -39,16 +35,16 @@ export default {
                     if (!token) {
                         return;
                     }
-                    conn = new JitsiMeetJS.JitsiConnection(token, connectionConfig);
-                    conn.addEventListener(JitsiMeetJS.events.connection.CONNECTION_ESTABLISHED, onConnectionSuccess);
-                    conn.addEventListener(JitsiMeetJS.events.connection.CONNECTION_FAILED, onConnectionFailed);
-                    conn.addEventListener(JitsiMeetJS.events.connection.CONNECTION_DISCONNECTED, onConnectionDisconnected);
-                    conn.addEventListener(JitsiMeetJS.events.connection.PASSWORD_REQUIRED, onConnectionDisconnected);
+                    conn = new SariskaMediaTransport.JitsiConnection(token, connectionConfig);
+                    conn.addEventListener(SariskaMediaTransport.events.connection.CONNECTION_ESTABLISHED, onConnectionSuccess);
+                    conn.addEventListener(SariskaMediaTransport.events.connection.CONNECTION_FAILED, onConnectionFailed);
+                    conn.addEventListener(SariskaMediaTransport.events.connection.CONNECTION_DISCONNECTED, onConnectionDisconnected);
+                    conn.addEventListener(SariskaMediaTransport.events.connection.PASSWORD_REQUIRED, onConnectionDisconnected);
                     conn.connect();
                 }
 
                 const onConnectionSuccess = ()=>{
-                    setConnection(conn);
+                    connection.value= conn;
                 }
 
                 const onConnectionDisconnected = (error)=>{
@@ -57,13 +53,13 @@ export default {
                         return;
                     }
                     connection.value.removeEventListener(
-                        JitsiMeetJS.events.connection.CONNECTION_ESTABLISHED,
+                        SariskaMediaTransport.events.connection.CONNECTION_ESTABLISHED,
                         onConnectionSuccess);
                     connection.value.removeEventListener(
-                        JitsiMeetJS.events.connection.CONNECTION_FAILED,
+                        SariskaMediaTransport.events.connection.CONNECTION_FAILED,
                         onConnectionFailed);
                     connection.value.removeEventListener(
-                        JitsiMeetJS.events.connection.CONNECTION_DISCONNECTED,
+                        SariskaMediaTransport.events.connection.CONNECTION_DISCONNECTED,
                         onConnectionDisconnected);
 
                 }

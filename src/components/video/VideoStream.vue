@@ -1,6 +1,7 @@
 <template>
-    <video autoplay="1" ref="videoRef" class="video" />
-    <div>I am video</div>
+    <video :src="track" autoplay="1" ref="videoRef" class="video">
+
+    </video>
 </template>
 
 <script>
@@ -8,7 +9,9 @@ import {toRef, ref, watchEffect, onBeforeUnmount} from 'vue';
 export default {
     name: 'VideoStream',
     props:{
-        track: String
+        track: {
+            type: [String, Object, Array]
+        }
     },
     setup(props){
         const videoRef = ref(null);

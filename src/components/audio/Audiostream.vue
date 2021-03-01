@@ -1,5 +1,5 @@
 <template>
-    <audio autoplay="1" ref="audioRef" />
+    <audio autoplay="1" ref="audioRef" :src="track"></audio>
 </template>
 
 <script>
@@ -7,7 +7,9 @@ import {toRef, ref, watchEffect, onBeforeUnmount} from 'vue';
 export default {
     name: 'AudioStream',
     props:{
-        track: String
+        track: {
+          type: [String, Array, Object]
+        } 
     },
     setup(props){
         const audioRef = ref(null);

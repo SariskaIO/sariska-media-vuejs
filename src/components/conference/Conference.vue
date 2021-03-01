@@ -1,28 +1,28 @@
 <template>
     <div>
         <LocalStream :localTracks="localTracks" />
-        <RemoteStream :remoteTracks="remoteTracks" />
-        <div>i am {{localTracks}}</div>
-        <div>me am {{remoteTracks}}</div>
+        <!-- <RemoteStream :remoteTracks="remoteTracks" /> -->
     </div>
 </template>
 
 <script>
 import { toRef, ref, watch, onUnmounted } from 'vue';
-import JitsiMeetJS from "sariska-media-transport";
+import SariskaMediaTransport from "sariska-media-transport";
 import {conferenceConfig} from '@/constants';
 import LocalStream from '../localStream/LocalStream';
-import RemoteStream from '../remoteStream/RemoteStream';
+//import RemoteStream from '../remoteStream/RemoteStream';
 
 export default {
     name: 'Conference',
     components: {
         LocalStream,
-        RemoteStream
+        //RemoteStream
     },
 
     props: {
-        connection: Object
+        connection: {
+            type: [String, Object, Array]
+        }   
     },
 
     setup(props){
@@ -31,18 +31,20 @@ export default {
         const remoteTracks = ref([]);
         const localTracks = ref([]);
         const connection = toRef(props, 'connection');
-
+        console.log('log con', connection.value);
         const setRoom = (roomValue) => {
             room.value = roomValue
         }
         const setRemoteTracks = (trackValue) => remoteTracks.value = [...remoteTracks.value, trackValue];
         
-        const setLocalTracks = (trackValue) => localTracks.value = [...localTracks.value, trackValue];   
+        const setLocalTracks = (trackValue) => localTracks.value = [...localTracks.value, ...trackValue];   
 
         watch(room, ()=>{
-            JitsiMeetJS.createLocalTracks({devices:["audio", "video"], resolution: "180"}).
+            SariskaMediaTransport.createLocalTracks({devices:["audio", "video"], resolution: "180"}).
             then(tracks => {
             setLocalTracks(tracks);
+            console.log('lts is', tracks);
+            console.log('lots is', localTracks.value);
             room.value && tracks.forEach(track=>room.value.addTrack(track).catch(err =>console.log("track already added", err)));
         }).
         catch(()=>console.log("failed to fetch tracks"));
@@ -52,7 +54,6 @@ export default {
             if (!connection.value) {
                 return; 
             }
-
             const room = connection.value.initJitsiConference(conferenceConfig);
 
             const onConferenceJoined = ()=> {
@@ -66,12 +67,13 @@ export default {
                 if (!track  || track.isLocal()) {
                     return;
                 }
+                console.log('remyu', track);
                 setRemoteTracks(track);
             }
 
-            room.on(JitsiMeetJS.events.conference.CONFERENCE_JOINED, onConferenceJoined);
-            room.on(JitsiMeetJS.events.conference.TRACK_ADDED, onRemoteTrack);
-            room.on(JitsiMeetJS.events.conference.TRACK_REMOVED, onTrackRemoved);
+            room.on(SariskaMediaTransport.events.conference.CONFERENCE_JOINED, onConferenceJoined);
+            room.on(SariskaMediaTransport.events.conference.TRACK_ADDED, onRemoteTrack);
+            room.on(SariskaMediaTransport.events.conference.TRACK_REMOVED, onTrackRemoved);
             room.join();
         })
 

@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "core-js": "^3.6.5",
-    "sariska-media-transport": "git+https://github.com/SariskaIO/sariska-media-transport.git",
+    "sariska-media-transport": "git+https://github.com/SariskaIO/sariska-media-transport.git#bk--ts",
     "vue": "^3.0.0"
   },
   "devDependencies": {

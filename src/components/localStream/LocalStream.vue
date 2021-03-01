@@ -8,19 +8,18 @@
                 <AudioStream :track="track" />
             </div>
         </div>
-        <div>I am local</div>
     </div>
 </template>
 
 <script>
-import { toRef } from 'vue';
+import { toRef, watch } from 'vue';
 import AudioStream from '../audio/Audiostream';
 import VideoStream from '../video/VideoStream';
 
 export default {
     name: 'LocalStream',
     props: {
-        localTracks: [Array, Function]
+        localTracks: Array
     },
     components: {
         AudioStream,
@@ -28,7 +27,10 @@ export default {
     },
     setup(props){
         const lTracks=toRef(props, 'localTracks');
-        console.log('local', lTracks.value);
+        watch(()=>{
+        console.log('local1', lTracks.value);
+
+        })
     }
 }
 </script>
